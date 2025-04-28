@@ -38,9 +38,8 @@ export const Logout = styled.button`
 
 export const Infor = styled.div`
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 30px;
+    flex-direction: row;
+    gap: 50px;
 `
 
 export const Title = styled.h1`
@@ -160,4 +159,10 @@ export const PageList = styled.div`
   display: flex;
   gap: 5px;
   align-items: center;
+`
+export const ListUser = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
 `

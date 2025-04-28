@@ -9,7 +9,8 @@ import {
   Thead, Tbody, Add, Edit as EditBtn, Delete as DeleteBtn,
   ActionGroup, FilterWrapper, FilterInput,
   Pagination, PageButtons, PageButton, PageSizeSelect,
-  PageList
+  PageList,
+  ListUser
 } from '../style/UserListStyles'
 
 export default function UserList() {
@@ -87,6 +88,11 @@ export default function UserList() {
   }
 
   const handleDelete = async id => {
+    if (!isAdmin) {
+      toast.error('Bạn không đủ quyền xóa user này')
+      return
+    }
+    
     if (!window.confirm('Bạn có chắc muốn xóa user này?')) return
     try {
       await api.delete(`/users/${id}`)
@@ -111,116 +117,118 @@ export default function UserList() {
     <Background>
       <Menu><Logout onClick={handleLogout}>Đăng xuất</Logout></Menu>
       <Infor>
-        <Title>Danh sách người dùng</Title>
+        <ListUser>
+          <Title>Danh sách người dùng</Title>
 
-        <FilterWrapper>
-          <FilterInput
-            placeholder="Tìm theo tên hoặc email..."
-            value={filterText}
-            onChange={e => setFilterText(e.target.value)}
-          />
-        </FilterWrapper>
+            <FilterWrapper>
+              <FilterInput
+                placeholder="Tìm theo tên hoặc email..."
+                value={filterText}
+                onChange={e => setFilterText(e.target.value)}
+              />
+            </FilterWrapper>
 
-        <Table>
-          <Thead>
-            <Tr>
-              {[
-                { key: 'user_id', label: 'User_ID' },
-                { key: 'name',    label: 'Name'    },
-                { key: 'email',   label: 'Email'   },
-                { key: 'role',    label: 'Role'    }
-              ].map(col => (
-                <Th
-                  key={col.key}
-                  onClick={() => handleSort(col.key)}
-                  style={{ cursor: 'pointer', userSelect: 'none' }}
+            <Table>
+              <Thead>
+                <Tr>
+                  {[
+                    { key: 'user_id', label: 'User_ID' },
+                    { key: 'name',    label: 'Name'    },
+                    { key: 'email',   label: 'Email'   },
+                    { key: 'role',    label: 'Role'    }
+                  ].map(col => (
+                    <Th
+                      key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
+                    >
+                      {col.label}
+                      {sortConfig.key === col.key && (
+                        sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽'
+                      )}
+                    </Th>
+                  ))}
+                  <Th>Actions</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {paginated.map(u => (
+                  <Tr key={u.user_id}>
+                    <Td>{u.user_id}</Td>
+                    <Td>{u.name}</Td>
+                    <Td>{u.email}</Td>
+                    <Td>{u.role}</Td>
+                    <Td>
+                      <ActionGroup>
+                        <EditBtn onClick={() => openEditForm(u)}>Sửa</EditBtn>
+                        <DeleteBtn onClick={() => handleDelete(u.user_id)}>Xóa</DeleteBtn>
+                      </ActionGroup>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+
+            <Pagination>
+            <PageButtons>
+              <PageButton
+                disabled={currentPage === 1}
+                onClick={() =>
+                  setCurrentPage(prev => Math.max(prev - 1, 1))
+                }
+              >
+                ‹ Prev
+              </PageButton>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                <PageButton
+                  key={pageNum}
+                  disabled={pageNum === currentPage}
+                  $active={pageNum === currentPage}
+                  onClick={() => setCurrentPage(pageNum)}
                 >
-                  {col.label}
-                  {sortConfig.key === col.key && (
-                    sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽'
-                  )}
-                </Th>
+                  {pageNum}
+                </PageButton>
               ))}
-              <Th>Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {paginated.map(u => (
-              <Tr key={u.user_id}>
-                <Td>{u.user_id}</Td>
-                <Td>{u.name}</Td>
-                <Td>{u.email}</Td>
-                <Td>{u.role}</Td>
-                <Td>
-                  <ActionGroup>
-                    <EditBtn onClick={() => openEditForm(u)}>Sửa</EditBtn>
-                    <DeleteBtn onClick={() => handleDelete(u.user_id)}>Xóa</DeleteBtn>
-                  </ActionGroup>
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
 
-        <Pagination>
-        <PageButtons>
-          <PageButton
-            disabled={currentPage === 1}
-            onClick={() =>
-              setCurrentPage(prev => Math.max(prev - 1, 1))
-            }
-          >
-            ‹ Prev
-          </PageButton>
+              <PageButton
+                onClick={() =>
+                  setCurrentPage(prev => Math.min(prev + 1, totalPages))
+                }
+              >
+                Next ›
+              </PageButton>
+            </PageButtons>
+              <PageList>
+                Records/page:
+                <PageSizeSelect
+                  value={pageSize}
+                  onChange={e => setPageSize(Number(e.target.value))}
+                >
+                  {[1, 2, 5, 10, 20, 50].map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </PageSizeSelect>
 
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-            <PageButton
-              key={pageNum}
-              disabled={pageNum === currentPage}
-              $active={pageNum === currentPage}
-              onClick={() => setCurrentPage(pageNum)}
-            >
-              {pageNum}
-            </PageButton>
-          ))}
+              </PageList>
+            </Pagination>
 
-          <PageButton
+            <Add onClick={openNewForm}>Thêm user</Add>
+        </ListUser>
         
-            onClick={() =>
-              setCurrentPage(prev => Math.min(prev + 1, totalPages))
-            }
-          >
-            Next ›
-          </PageButton>
-        </PageButtons>
-          <PageList>
-            Records/page:
-            <PageSizeSelect
-              value={pageSize}
-              onChange={e => setPageSize(Number(e.target.value))}
-            >
-              {[1, 2, 5, 10, 20, 50].map(n => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </PageSizeSelect>
 
-          </PageList>
-        </Pagination>
-
-        <Add onClick={openNewForm}>Thêm user</Add>
+        {editing && isAdmin && (
+          <UserForm
+            key={editing.user_id ?? 'new'}
+            user={editing}
+            onSuccess={() => {
+              setEditing(null)
+              fetchUsers()
+            }}
+            onCancel={() => setEditing(null)}
+          />
+        )}
       </Infor>
-
-      {editing && isAdmin && (
-        <UserForm
-          key={editing.user_id ?? 'new'}
-          user={editing}
-          onSuccess={() => {
-            setEditing(null)
-            fetchUsers()
-          }}
-          onCancel={() => setEditing(null)}
-        />
-      )}
     </Background>
   )
 }
