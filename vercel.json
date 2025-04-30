@@ -12,8 +12,16 @@
      }
    ],
    "routes": [
-     { "src": "/api/(.*)", "dest": "/Backend/src/server.ts" },
-     { "src": "/(.*)",       "dest": "/Frontend/$1" }
-   ]
+   {
+      "src": "/api(?:/(.*))?$",
+      "methods": ["GET","POST","PUT","DELETE","OPTIONS","PATCH"],
+      "dest": "/Backend/src/server.ts"
+   },
+   {
+      "src": "/(.*)",
+      "dest": "/Frontend/$1"
+   }
+]
+
  }
  
